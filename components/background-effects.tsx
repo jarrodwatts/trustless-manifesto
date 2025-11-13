@@ -60,13 +60,13 @@ export function BackgroundEffects() {
         />
       </div>
 
-      {/* 3D Lines overlay */}
-      <div className="absolute inset-0 opacity-15 mix-blend-screen pointer-events-none">
+      {/* 3D Lines overlay - positioned at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-[600px] opacity-45 mix-blend-screen pointer-events-none">
         <Image
-          src="/3d-lines.png"
+          src="/3d-lines.svg"
           alt=""
           fill
-          className="object-cover"
+          className="object-cover object-bottom"
         />
       </div>
 
