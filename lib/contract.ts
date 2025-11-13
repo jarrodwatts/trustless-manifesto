@@ -1,0 +1,86 @@
+import { defineChain } from "thirdweb/chains";
+
+// Ethereum Mainnet
+export const CHAIN = defineChain(1);
+
+// Contract address
+export const CONTRACT_ADDRESS = "0x32aa964746ba2be65c71fe4a5cb3c4a023ca3e20";
+
+// Contract ABI
+export const CONTRACT_ABI = [
+  {
+    name: "Pledged",
+    inputs: [
+      { name: "signer", type: "address", indexed: true },
+      { name: "timestamp", type: "uint256", indexed: false },
+    ],
+    anonymous: false,
+    type: "event",
+  },
+  {
+    stateMutability: "nonpayable",
+    type: "function",
+    name: "pledge",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    stateMutability: "view",
+    type: "function",
+    name: "pledged_before",
+    inputs: [
+      { name: "who", type: "address" },
+      { name: "cutoff", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    stateMutability: "view",
+    type: "function",
+    name: "has_pledged",
+    inputs: [{ name: "who", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    stateMutability: "view",
+    type: "function",
+    name: "TITLE",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    stateMutability: "view",
+    type: "function",
+    name: "AUTHORS",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    stateMutability: "view",
+    type: "function",
+    name: "DATE",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    stateMutability: "view",
+    type: "function",
+    name: "MANIFESTO",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    stateMutability: "view",
+    type: "function",
+    name: "pledge_at",
+    inputs: [{ name: "arg0", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    stateMutability: "view",
+    type: "function",
+    name: "pledge_count",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
