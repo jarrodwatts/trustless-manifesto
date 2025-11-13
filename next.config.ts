@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "export", // makes build static
+  trailingSlash: true, // friendlier for IPFS
+  assetPrefix: "./", // ensures relative asset paths for IPFS
 };
 
 export default nextConfig;
