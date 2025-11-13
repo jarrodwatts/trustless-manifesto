@@ -5,12 +5,14 @@ import { ConnectButton, useActiveAccount, useReadContract } from "thirdweb/react
 import { prepareContractCall, sendTransaction, getContract } from "thirdweb";
 import { CONTRACT_ADDRESS, CONTRACT_ABI, CHAIN } from "@/lib/contract";
 import { client } from "@/lib/client";
-import { Check, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { ShinyRainbowButton } from "@/components/ui/shiny-rainbow-button";
+import { ShareableCard } from "@/components/shareable-card";
 
 export function SignButton({ onSigned }: { onSigned?: () => void }) {
   const account = useActiveAccount();
   const [isSigning, setIsSigning] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const contract = getContract({
     client,
@@ -82,15 +84,22 @@ export function SignButton({ onSigned }: { onSigned?: () => void }) {
     );
   }
 
-  if (hasPledged) {
+  if (hasPledged && account) {
     return (
-      <button
-        disabled
-        className="flex items-center justify-center gap-2 bg-zinc-900/50 text-white font-medium px-8 h-14 rounded-xl border border-white/10 cursor-not-allowed w-full"
-      >
-        <Check className="w-5 h-5 text-green-400" />
-        Manifesto signed
-      </button>
+      <>
+        <ShinyRainbowButton
+          onClick={() => setIsShareModalOpen(true)}
+          className="w-full"
+        >
+          Share Manifesto Card
+        </ShinyRainbowButton>
+        <ShareableCard
+          address={account.address}
+          isOpen={isShareModalOpen}
+          onOpenChange={setIsShareModalOpen}
+          showButton={false}
+        />
+      </>
     );
   }
 
@@ -102,10 +111,10 @@ export function SignButton({ onSigned }: { onSigned?: () => void }) {
         className="w-full"
       >
         {isSigning ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+          <span className="flex items-center gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
             Signing...
-          </>
+          </span>
         ) : (
           <>Sign the Manifesto</>
         )}

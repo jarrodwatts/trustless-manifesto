@@ -55,23 +55,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Shareable Card (shown after signing) */}
-        {hasPledged && account && (
-          <div className="py-8 w-full flex justify-center">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-white mb-2">
-                Thank you for signing!
-              </h3>
-              <p className="text-zinc-400 mb-6">
-                Download and share your signature card
-              </p>
-              <ShareableCard
-                address={account.address}
-                signatureNumber={pledgeCount ? Number(pledgeCount) : undefined}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Signatures Feed */}
         <SignaturesFeed />
