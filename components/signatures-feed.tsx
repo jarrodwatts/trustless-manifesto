@@ -135,18 +135,18 @@ export function SignaturesFeed() {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-12">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-end justify-between">
         <h2 className="text-2xl font-bold text-white">Recent Signatures</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-0">
+          <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">
+            pledges
+          </div>
           <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             {isLoadingCount ? (
               <div className="animate-pulse">...</div>
             ) : (
               <NumberTicker value={count} />
             )}
-          </div>
-          <div className="text-zinc-500 text-sm">
-            pledges
           </div>
         </div>
       </div>
