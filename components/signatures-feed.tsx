@@ -6,8 +6,8 @@ import { getContract } from "thirdweb";
 import { CONTRACT_ADDRESS, CONTRACT_ABI, CHAIN } from "@/lib/contract";
 import { client } from "@/lib/client";
 import { SignatureCard } from "./signature-card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { NumberTicker } from "@/components/ui/number-ticker";
+import { LoaderOne } from "@/components/ui/loader";
 
 interface PledgedEvent {
   signer: string;
@@ -15,24 +15,115 @@ interface PledgedEvent {
   transactionHash?: string;
 }
 
-function SignatureCardSkeleton() {
-  return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900/50 border border-white/10 backdrop-blur-sm">
-      <Skeleton className="w-12 h-12 rounded-full" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-3 w-20" />
-      </div>
-      <Skeleton className="h-6 w-16 rounded-full" />
-      <Skeleton className="w-8 h-8 rounded-lg" />
-    </div>
-  );
+function normalizePledgedEvents(events: Array<any>): PledgedEvent[] {
+  const normalized: PledgedEvent[] = [];
+
+  for (const event of events) {
+    if (event?.eventName !== "Pledged") {
+      continue;
+    }
+
+    const args = event?.args ?? {};
+    const signer = extractSigner(args);
+    if (!signer) {
+      continue;
+    }
+
+    const timestamp = extractTimestamp(args);
+    const transactionHash =
+      typeof event?.transactionHash === "string"
+        ? event.transactionHash
+        : typeof event?.transaction?.transactionHash === "string"
+          ? event.transaction.transactionHash
+          : undefined;
+
+    normalized.push({
+      signer,
+      timestamp,
+      transactionHash,
+    });
+  }
+
+  return normalized.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+}
+
+function mergeEvents(existing: PledgedEvent[], incoming: PledgedEvent[]): PledgedEvent[] {
+  if (incoming.length === 0) {
+    return existing;
+  }
+
+  const merged = new Map<string, PledgedEvent>();
+
+  for (const event of existing) {
+    merged.set(getEventKey(event), event);
+  }
+
+  for (const event of incoming) {
+    merged.set(getEventKey(event), event);
+  }
+
+  return Array.from(merged.values()).sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+}
+
+function extractSigner(args: Record<string, unknown> | Array<unknown>): string | undefined {
+  if (Array.isArray(args)) {
+    const [signer] = args;
+    return typeof signer === "string" ? signer : undefined;
+  }
+
+  if (args && typeof args === "object") {
+    const signer = (args as Record<string, unknown>).signer;
+    return typeof signer === "string" ? signer : undefined;
+  }
+
+  return undefined;
+}
+
+function extractTimestamp(args: Record<string, unknown> | Array<unknown>): bigint {
+  let value: unknown;
+
+  if (Array.isArray(args)) {
+    [, value] = args;
+  } else if (args && typeof args === "object") {
+    value = (args as Record<string, unknown>).timestamp;
+  }
+
+  if (typeof value === "bigint") {
+    return value;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return BigInt(Math.floor(value));
+  }
+
+  if (typeof value === "string" && value.length > 0) {
+    try {
+      return BigInt(value);
+    } catch {
+      // ignore parse errors, fall through to default
+    }
+  }
+
+  if (value && typeof value === "object" && "toString" in value && typeof (value as { toString: () => string }).toString === "function") {
+    try {
+      return BigInt((value as { toString: () => string }).toString());
+    } catch {
+      // ignore parse errors, fall through to default
+    }
+  }
+
+  return BigInt(Math.floor(Date.now() / 1000));
+}
+
+function getEventKey(event: PledgedEvent) {
+  return `${event.signer}-${event.timestamp}-${event.transactionHash ?? ""}`;
 }
 
 export function SignaturesFeed() {
   const [displayCount, setDisplayCount] = useState(20);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
+  const [allEvents, setAllEvents] = useState<PledgedEvent[]>([]);
   const prevEventsLengthRef = useRef(0);
   const isInitialLoadRef = useRef(true);
 
@@ -50,30 +141,20 @@ export function SignaturesFeed() {
     params: [],
   });
 
-  // Use thirdweb's useContractEvents hook
+  // Use watch mode to stream events as they come in
   const { data: contractEvents, isLoading } = useContractEvents({
     contract,
+    watch: true,
   });
 
-  // Process and format events
-  const allEvents = useMemo(() => {
-    if (!contractEvents || contractEvents.length === 0) return [];
+  // Process events as they come in
+  useEffect(() => {
+    if (!contractEvents) {
+      return;
+    }
 
-    console.log("Contract events:", contractEvents);
-
-    return contractEvents
-      .filter((event: any) => event.eventName === "Pledged") // Only Pledged events
-      .map((event: any) => {
-        console.log("Processing event:", event);
-        const args = event.args || {};
-        return {
-          signer: args.signer || args[0],
-          timestamp: args.timestamp || args[1] || BigInt(Date.now() / 1000),
-          transactionHash: event.transactionHash,
-        };
-      })
-      .filter((event: PledgedEvent) => event.signer) // Filter out invalid entries
-      .sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+    const normalized = normalizePledgedEvents(contractEvents);
+    setAllEvents((prev) => mergeEvents(prev, normalized));
   }, [contractEvents]);
 
   // Get events to display (for infinite scroll)
@@ -83,7 +164,7 @@ export function SignaturesFeed() {
 
   // Detect new items and mark them for animation
   useEffect(() => {
-    if (isInitialLoadRef.current && allEvents.length > 0) {
+    if (isInitialLoadRef.current) {
       // Skip animation for initial load
       prevEventsLengthRef.current = allEvents.length;
       isInitialLoadRef.current = false;
@@ -108,6 +189,8 @@ export function SignaturesFeed() {
       setTimeout(() => {
         setNewItemIds(new Set());
       }, 600);
+    } else {
+      prevEventsLengthRef.current = allEvents.length;
     }
   }, [allEvents]);
 
@@ -141,7 +224,7 @@ export function SignaturesFeed() {
           <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">
             pledges
           </div>
-          <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <div className="text-2xl font-bold bg-linear-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             {isLoadingCount ? (
               <div className="animate-pulse">...</div>
             ) : (
@@ -151,48 +234,50 @@ export function SignaturesFeed() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <SignatureCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : events.length === 0 ? (
+      {events.length === 0 && !isLoading ? (
         <div className="text-center py-12 text-zinc-500">
-          <p className="mb-2">Loading signatures...</p>
-          <p className="text-xs">If this persists, events may still be syncing from the blockchain</p>
+          <p className="mb-2">No signatures yet.</p>
+          <p className="text-xs">Check back soon to see new pledges land here.</p>
         </div>
       ) : (
         <>
-          <div className="space-y-3">
-            {events.map((event, index) => {
-              const eventId = `${event.signer}-${event.timestamp}`;
-              const isNew = newItemIds.has(eventId);
+          {events.length > 0 && (
+            <div className="space-y-3">
+              {events.map((event, index) => {
+                const eventId = `${event.signer}-${event.timestamp}`;
+                const isNew = newItemIds.has(eventId);
 
-              return (
-                <div
-                  key={`${eventId}-${index}`}
-                  className={isNew ? "animate-slide-in" : ""}
-                >
-                  <SignatureCard
-                    address={event.signer}
-                    timestamp={event.timestamp}
-                    transactionHash={event.transactionHash}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {isLoadingMore && (
-            <div className="mt-4 space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <SignatureCardSkeleton key={i} />
-              ))}
+                return (
+                  <div
+                    key={`${eventId}-${index}`}
+                    className={isNew ? "animate-slide-in" : ""}
+                  >
+                    <SignatureCard
+                      address={event.signer}
+                      timestamp={event.timestamp}
+                      transactionHash={event.transactionHash}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {events.length >= allEvents.length && allEvents.length > 0 && (
+          {/* Show loader below loaded events while fetching more */}
+          {isLoading && (
+            <div className="mt-6 flex justify-center">
+              <LoaderOne />
+            </div>
+          )}
+
+          {isLoadingMore && (
+            <div className="mt-4 flex justify-center">
+              <LoaderOne />
+            </div>
+          )}
+
+          {/* Only show "reached the end" if we've displayed all events, have events, and not loading */}
+          {events.length > 0 && events.length >= allEvents.length && allEvents.length > 0 && !isLoading && !isLoadingMore && (
             <div className="text-center py-8 text-zinc-500 text-sm">
               You&apos;ve reached the end
             </div>

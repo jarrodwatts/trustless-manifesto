@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { resolveAddressToENS, resolveENSAvatar, truncateAddress, generateGradientForAddress } from "@/lib/ens";
 import { ExternalLink } from "lucide-react";
+import { BorderBeam } from "@/components/ui/border-beam";
 
 interface SignatureCardProps {
   address: string;
@@ -50,8 +51,10 @@ export function SignatureCard({ address, timestamp, transactionHash }: Signature
     : `https://etherscan.io/address/${address}`;
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900/50 border border-white/10 hover:border-white/20 transition-colors backdrop-blur-sm group">
-      {/* Avatar */}
+    <div className="relative rounded-xl group">
+      {/* Card Content */}
+      <div className="relative z-0 flex items-center gap-4 p-4 rounded-xl bg-zinc-900/50 border border-white/10 hover:border-transparent transition-all backdrop-blur-sm">
+        {/* Avatar */}
       <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
         {isLoading ? (
           <div className="w-full h-full bg-zinc-800 animate-pulse" />
@@ -94,6 +97,18 @@ export function SignatureCard({ address, timestamp, transactionHash }: Signature
       >
         <ExternalLink className="w-4 h-4 text-zinc-400 hover:text-white transition-colors" />
       </a>
+      </div>
+      
+      {/* Border Beam - only visible on hover, positioned on top */}
+      <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+        <BorderBeam
+          duration={4}
+          size={100}
+          colorFrom="#06b6d4"
+          colorTo="#d946ef"
+          borderWidth={2}
+        />
+      </div>
     </div>
   );
 }

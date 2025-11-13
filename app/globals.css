@@ -76,6 +76,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Rainbow button colors */
+  --color-1: 330 100% 70%;
+  --color-2: 280 100% 70%;
+  --color-3: 200 100% 70%;
+  --color-4: 180 100% 70%;
+  --color-5: 160 100% 70%;
 }
 
 .dark {
@@ -180,6 +187,20 @@
   animation: glow-pulse 4s ease-in-out infinite;
 }
 
+/* Rainbow button animation */
+@keyframes rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.animate-rainbow {
+  animation: rainbow 3s linear infinite;
+}
+
 /* Grid pattern */
 .bg-grid-pattern {
   background-image:
@@ -214,4 +235,33 @@
 
 .animate-slide-in {
   animation: slide-in 600ms ease-out;
+}
+
+/* Border beam animation - travels along the border path */
+@keyframes border-beam-travel {
+  0% {
+    stroke-dashoffset: var(--perimeter, 800px);
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-border-beam-travel {
+  animation: border-beam-travel var(--duration) linear infinite;
+  /* Ensure crisp rendering */
+  shape-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Border beam spin animation - kept for backwards compatibility */
+@keyframes border-beam-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-border-beam-spin {
+  animation: border-beam-spin var(--duration) linear infinite;
 }

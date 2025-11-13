@@ -44,14 +44,15 @@ export default function Home() {
         {/* Hero Section */}
         <HeroSection />
 
-        {/* Sign Button */}
-        <div className="py-6">
-          <SignButton />
-        </div>
-
-        {/* Read Manifesto Button */}
-        <div className="py-2">
-          <ManifestoModal />
+        {/* Action Buttons - horizontally aligned and same size */}
+        <div className="flex flex-col items-center gap-3 py-6 w-full max-w-2xl px-4">
+          <div className="flex flex-row items-center gap-3 w-full">
+            <SignButton />
+            <ManifestoModal />
+          </div>
+          <p className="text-sm text-zinc-500 text-center max-w-xl mt-2">
+            Signing means pledging to build trustless systems that prioritize openness over convenience.
+          </p>
         </div>
 
         {/* Shareable Card (shown after signing) */}

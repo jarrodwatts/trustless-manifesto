@@ -6,11 +6,11 @@ import { prepareContractCall, sendTransaction, getContract } from "thirdweb";
 import { CONTRACT_ADDRESS, CONTRACT_ABI, CHAIN } from "@/lib/contract";
 import { client } from "@/lib/client";
 import { Check, Loader2 } from "lucide-react";
+import { ShinyRainbowButton } from "@/components/ui/shiny-rainbow-button";
 
 export function SignButton({ onSigned }: { onSigned?: () => void }) {
   const account = useActiveAccount();
   const [isSigning, setIsSigning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const contract = getContract({
     client,
@@ -32,7 +32,6 @@ export function SignButton({ onSigned }: { onSigned?: () => void }) {
     if (!account) return;
 
     setIsSigning(true);
-    setError(null);
 
     try {
       const transaction = prepareContractCall({
@@ -55,7 +54,6 @@ export function SignButton({ onSigned }: { onSigned?: () => void }) {
       }
     } catch (err) {
       console.error("Error signing manifesto:", err);
-      setError(err instanceof Error ? err.message : "Failed to sign manifesto");
     } finally {
       setIsSigning(false);
     }
@@ -63,60 +61,55 @@ export function SignButton({ onSigned }: { onSigned?: () => void }) {
 
   if (!account) {
     return (
-      <div className="flex flex-col items-center gap-4">
-        <ConnectButton
-          client={client}
-          chain={CHAIN}
-          connectButton={{
-            label: "Connect Wallet to Sign",
-            className: "!bg-gradient-to-r !from-pink-500 !to-purple-500 hover:!from-pink-600 hover:!to-purple-600 !text-white !font-semibold !px-8 !py-4 !rounded-xl !text-lg !transition-all !duration-200 hover:!scale-105",
-          }}
-        />
+      <div className="flex flex-col items-center gap-4 w-full">
+        <div className="group relative w-full">
+          <div className="relative w-full">
+            <ConnectButton
+              client={client}
+              chain={CHAIN}
+              connectButton={{
+                label: "Connect Wallet to Sign",
+                className: "!group !relative !inline-flex !h-14 !animate-rainbow !cursor-pointer !items-center !justify-center !rounded-xl !border-0 !bg-[linear-gradient(#121213,#121213),linear-gradient(#121213_50%,rgba(18,18,19,0.6)_80%,rgba(18,18,19,0)),linear-gradient(90deg,hsl(var(--color-1)),hsl(var(--color-5)),hsl(var(--color-3)),hsl(var(--color-4)),hsl(var(--color-2)))] !bg-origin-border !px-8 !font-medium !text-white !transition-all !duration-300 ![background-clip:padding-box,border-box,border-box] ![background-size:200%_100%,100%_100%,100%_100%] ![border:calc(0.08*1rem)_solid_transparent] !focus-visible:outline-none !focus-visible:ring-1 !focus-visible:ring-ring !disabled:pointer-events-none !disabled:opacity-50 !overflow-visible !w-full !before:absolute !before:bottom-[-20%] !before:left-1/2 !before:z-0 !before:h-1/5 !before:w-3/5 !before:-translate-x-1/2 !before:animate-rainbow !before:bg-[linear-gradient(90deg,hsl(var(--color-1)),hsl(var(--color-5)),hsl(var(--color-3)),hsl(var(--color-4)),hsl(var(--color-2)))] !before:[filter:blur(calc(0.8*1rem))]",
+              }}
+            />
+            {/* Shimmer effect overlay */}
+            <div className="absolute inset-0 z-[11] rounded-xl pointer-events-none overflow-hidden">
+              <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.5)_50%,transparent_75%,transparent_100%)] bg-[length:250%_250%,100%_100%] bg-[position:120%_0,0_0] bg-no-repeat transition-[background-position] duration-1000 group-hover:bg-[position:-100%_0,0_0]" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (hasPledged) {
     return (
-      <div className="flex flex-col items-center gap-4">
-        <button
-          disabled
-          className="flex items-center gap-2 bg-green-500/20 text-green-400 font-semibold px-8 py-4 rounded-xl text-lg border border-green-500/30 cursor-not-allowed"
-        >
-          <Check className="w-5 h-5" />
-          Already Signed
-        </button>
-        <p className="text-sm text-zinc-500">
-          You&apos;ve already signed the manifesto
-        </p>
-      </div>
+      <button
+        disabled
+        className="flex items-center justify-center gap-2 bg-zinc-900/50 text-white font-medium px-8 h-14 rounded-xl border border-white/10 cursor-not-allowed w-full"
+      >
+        <Check className="w-5 h-5 text-green-400" />
+        Manifesto signed
+      </button>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <button
+    <>
+      <ShinyRainbowButton
         onClick={handleSign}
         disabled={isSigning}
-        className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        className="w-full"
       >
         {isSigning ? (
           <>
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin mr-2" />
             Signing...
           </>
         ) : (
           <>Sign the Manifesto</>
         )}
-      </button>
-      {error && (
-        <p className="text-sm text-red-400 max-w-md text-center">
-          {error}
-        </p>
-      )}
-      <p className="text-sm text-zinc-500 max-w-md text-center">
-        By signing, you pledge to build trustless systems on Ethereum
-      </p>
-    </div>
+      </ShinyRainbowButton>
+    </>
   );
 }
