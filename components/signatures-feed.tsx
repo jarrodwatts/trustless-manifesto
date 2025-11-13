@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from "react";
-import { useContractEvents } from "thirdweb/react";
+import { useContractEvents, useReadContract } from "thirdweb/react";
 import { getContract } from "thirdweb";
 import { CONTRACT_ADDRESS, CONTRACT_ABI, CHAIN } from "@/lib/contract";
 import { client } from "@/lib/client";
 import { SignatureCard } from "./signature-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NumberTicker } from "@/components/ui/number-ticker";
 
 interface PledgedEvent {
   signer: string;
@@ -40,6 +41,13 @@ export function SignaturesFeed() {
     chain: CHAIN,
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
+  });
+
+  // Read the actual pledge count from the contract
+  const { data: pledgeCount, isLoading: isLoadingCount } = useReadContract({
+    contract,
+    method: "pledge_count",
+    params: [],
   });
 
   // Use thirdweb's useContractEvents hook
@@ -123,10 +131,24 @@ export function SignaturesFeed() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isLoadingMore, events.length, allEvents.length]);
 
+  const count = pledgeCount ? Number(pledgeCount) : 0;
+
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-12">
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Recent Signatures</h2>
+        <div className="flex items-center gap-2">
+          <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            {isLoadingCount ? (
+              <div className="animate-pulse">...</div>
+            ) : (
+              <NumberTicker value={count} />
+            )}
+          </div>
+          <div className="text-zinc-500 text-sm">
+            pledges
+          </div>
+        </div>
       </div>
 
       {isLoading ? (

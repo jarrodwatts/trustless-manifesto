@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { getContract } from "thirdweb";
 import { BackgroundEffects } from "@/components/background-effects";
 import { HeroSection } from "@/components/hero-section";
-import { SignatureCounter } from "@/components/signature-counter";
 import { SignButton } from "@/components/sign-button";
 import { SignaturesFeed } from "@/components/signatures-feed";
 import { ManifestoModal } from "@/components/manifesto-modal";
@@ -15,7 +13,6 @@ import { client } from "@/lib/client";
 
 export default function Home() {
   const account = useActiveAccount();
-  const [showCard, setShowCard] = useState(false);
 
   const contract = getContract({
     client,
@@ -39,10 +36,6 @@ export default function Home() {
     params: [],
   });
 
-  const handleSigned = () => {
-    setShowCard(true);
-  };
-
   return (
     <div className="min-h-screen relative">
       <BackgroundEffects />
@@ -51,16 +44,13 @@ export default function Home() {
         {/* Hero Section */}
         <HeroSection />
 
-        {/* Signature Counter */}
-        <SignatureCounter />
-
         {/* Sign Button */}
-        <div className="py-8">
-          <SignButton onSigned={handleSigned} />
+        <div className="py-6">
+          <SignButton />
         </div>
 
         {/* Read Manifesto Button */}
-        <div className="py-4">
+        <div className="py-2">
           <ManifestoModal />
         </div>
 
