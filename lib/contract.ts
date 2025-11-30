@@ -1,7 +1,26 @@
 import { defineChain } from "thirdweb/chains";
 
-// Ethereum Mainnet
-export const CHAIN = defineChain(1);
+// Ethereum Mainnet with custom RPC
+// If NEXT_PUBLIC_ETHEREUM_RPC_URL is set, use it; otherwise fall back to default Thirdweb RPC
+const ethereumRpcUrl = process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL;
+
+export const CHAIN = ethereumRpcUrl
+  ? defineChain({
+      id: 1, // Ethereum mainnet chain ID
+      rpc: ethereumRpcUrl, // Your custom Ethereum mainnet RPC URL
+      nativeCurrency: {
+        name: "Ether",
+        symbol: "ETH",
+        decimals: 18,
+      },
+      blockExplorers: [
+        {
+          name: "Etherscan",
+          url: "https://etherscan.io",
+        },
+      ],
+    })
+  : defineChain(1); // Fallback to default Thirdweb RPC if no custom URL is provided
 
 // Contract address
 export const CONTRACT_ADDRESS = "0x32aa964746ba2be65c71fe4a5cb3c4a023ca3e20";
